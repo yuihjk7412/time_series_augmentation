@@ -49,6 +49,18 @@ def magnitude_warp(x, sigma=0.2, knot=4):
 
     return ret
 
+
+def magnitude_warp_1d(x, sigma=0.2, knot=4):
+    from scipy.interpolate import CubicSpline
+    orig_steps = np.arange(len(x))
+
+    random_warps = np.random.normal(loc=1.0, scale=sigma, size=knot+2)
+    warp_steps = np.linspace(0, len(x) - 1., num=knot + 2)
+    warper = np.array(
+            CubicSpline(warp_steps, random_warps)(orig_steps))
+    ret = x * warper
+    return ret
+
 def time_warp(x, sigma=0.2, knot=4):
     from scipy.interpolate import CubicSpline
     orig_steps = np.arange(x.shape[1])
@@ -62,6 +74,19 @@ def time_warp(x, sigma=0.2, knot=4):
             time_warp = CubicSpline(warp_steps[:,dim], warp_steps[:,dim] * random_warps[i,:,dim])(orig_steps)
             scale = (x.shape[1]-1)/time_warp[-1]
             ret[i,:,dim] = np.interp(orig_steps, np.clip(scale*time_warp, 0, x.shape[1]-1), pat[:,dim]).T
+    return ret
+
+
+def time_warp_1d(x, sigma=0.2, knot=4):
+    from scipy.interpolate import CubicSpline
+    orig_steps = np.arange(len(x))
+
+    random_warps = np.random.normal(loc=1.0, scale=sigma, size=knot + 2)
+    warp_steps = np.linspace(0, len(x) - 1., num=knot + 2)
+
+    time_warp = CubicSpline(warp_steps, warp_steps * random_warps)(orig_steps)
+    scale = (len(x) - 1) / time_warp[-1]
+    ret = np.interp(orig_steps, np.clip(scale * time_warp, 0, len(x) - 1), x)
     return ret
 
 def window_slice(x, reduce_ratio=0.9):
